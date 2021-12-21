@@ -26,24 +26,13 @@ void enter_directory();
 void help();
 void print_preview(Window * win);
 
-const char DTC[] = {
- [DT_BLK] =     'b',
- [DT_CHR] =     'c',
- [DT_DIR] =     'd',
- [DT_FIFO] =    'F',
- [DT_LNK] =     'l',
- [DT_REG] =     'f',
- [DT_SOCK] =    's',
- [DT_UNKNOWN] = '?',
-};
-
-const char * SUNIT[] = {"B", "KiB", "MiB", "GiB", "TiB"};
-
 magic_t magic_cookie;
 
 int (*current_filter)(const struct dirent *);
 int selected_item = 0;
 char current_path[PATH_MAX] = {0};
+
+#include "config.h"
 
 int filter_hidden(const struct dirent * e) {
 	return e->d_name[0] != '.';
@@ -103,15 +92,15 @@ void write_dir_content_to_win(Window * win, const char * dpath, unsigned select,
 	int n = scandir(dpath, &namelist, current_filter, alphasort);
 
 	if (n == 0) {
-		SET_COLOR(180, 100, 100);
+		SET_COLOR(PREVIEW_COMMENT);
 		printfxy_to_window(win, 0, offset, "empty");
 		RESET_VIDEO();
 	}
 
 	for (unsigned i = 0; i < n && i < get_term_height(); ++i) {
 		if (select == i) {
-			SET_BG(60, 103, 84);
-			SET_COLOR(0, 0, 0);
+			SET_BG(SELECTED_BG);
+			SET_COLOR(SELECTED_FG);
 		}
 
 		printfxy_to_window(win, 0, i + offset, " %c %s%*s", DTC[namelist[i]->d_type], namelist[i]->d_name, win->width - 5 - strlen(namelist[i]->d_name), "");
@@ -237,7 +226,7 @@ void print_preview(Window * win) {
 
 	magic_full = magic_file(magic_cookie, filepath);
 
-	SET_COLOR(100, 100, 100);
+	SET_COLOR(PREVIEW_COMMENT);
 	printfxy_to_window(win, 0, 0, "%s\nLast modified     %sSize              %s\nType:             %s",
 	                                filepath + strlen(current_path), ctime(&selstat.st_mtime), readable_size(selstat.st_size, size), magic_full);
 	RESET_VIDEO();
@@ -252,14 +241,14 @@ void print_preview(Window * win) {
 
 		fclose(fp);
 	} else if (strstr(magic_full, "directory")) {
-		SET_COLOR(100, 100, 100);
+		SET_COLOR(PREVIEW_COMMENT);
 		printfxy_to_window(win, 0, 5, "Content");
 		RESET_VIDEO();
 
 		DIR * dir = opendir(filepath);
 
 		if (dir == NULL) {
-			SET_COLOR(180, 60, 60);
+			SET_COLOR(ERROR);
 			printfxy_to_window(win, 0, 7, strerror(errno));
 			RESET_VIDEO();
 			return;
@@ -341,10 +330,10 @@ int main(int argc, char ** argv) {
 
 		printfxy(1, 1, "%s%*s[?] for help", current_path, get_term_width() - strlen(current_path) - 12, "");
 
-		SET_COLOR(40, 74, 53);
+		SET_COLOR(PREVIEW_BORDER_COLOR);
 		draw_window(&preview);
 		BOLD();
-		SET_COLOR(60, 103, 84);
+		SET_COLOR(MAIN_BORDER_COLOR);
 		draw_window(&mainwin);
 		RESET_VIDEO();
 

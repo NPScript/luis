@@ -15,11 +15,11 @@
 #define TTEE     "┬"
 #define PLUS     "─"
 #define RGB(t, r, g, b) "\033[38;2;" #r ";" #g ";" #b "m" t "\033[0m"
-#define SET_COLOR(r, g, b) printf("\033[38;2;" #r ";" #g ";" #b "m")
+#define SET_COLOR(a) printf("\033[38;2;%d;%d;%dm", a[0], a[1], a[2])
 #define RESET_VIDEO() printf("\033[0m")
 #define INVERT() printf("\033[7m")
 #define BOLD() printf("\033[1m")
-#define SET_BG(r, g, b) printf("\033[48;2;" #r ";" #g ";" #b "m")
+#define SET_BG(a) printf("\033[48;2;%d;%d;%dm", a[0], a[1], a[2])
 
 typedef struct {
 	unsigned width;
