@@ -1,4 +1,3 @@
-#include "tui.h"
 #include <dirent.h>
 #include <stdlib.h>
 #include <string.h>
@@ -10,6 +9,22 @@
 #include <limits.h>
 #include <unistd.h>
 #include <errno.h>
+
+#include "tui.h"
+
+int filter_hidden(const struct dirent * e);
+int filter_twodot_dir(const struct dirent * e);
+int number_of_dir_entries(const char * dpath);
+void set_current_path_to_pwd();
+char * readable_size(long size, char * dest);
+void get_selection_name(const char * dpath, char * name);
+void write_dir_content_to_win(Window * win, const char * dpath, unsigned select, unsigned offset);
+void switch_filter();
+void select_move(int n);
+void enter_parent();
+void enter_directory();
+void help();
+void print_preview(Window * win);
 
 const char DTC[] = {
  [DT_BLK] =     'b',
@@ -50,6 +65,28 @@ int number_of_dir_entries(const char * dpath) {
 
 	return n;
 }
+
+void set_current_path_to_pwd() {
+	if (getcwd(current_path, sizeof(current_path)) == NULL) {
+		fprintf(stderr, "getcwd error\n");
+		exit(-1);
+	}
+	strcat(current_path, "/");
+}
+
+char * readable_size(long size, char * dest) {
+	int n = 0;
+
+	while (size > 1000) {
+		size /= 1024;
+		++n;
+	}
+
+	sprintf(dest, "%d %s", size, SUNIT[n]);
+
+	return dest;
+}
+
 
 void get_selection_name(const char * dpath, char * name) {
 	struct dirent ** namelist;
@@ -187,19 +224,6 @@ void help() {
 	while (getch() != 'c');
 }
 
-char * readable_size(long size, char * dest) {
-	int n = 0;
-
-	while (size > 1000) {
-		size /= 1024;
-		++n;
-	}
-
-	sprintf(dest, "%d %s", size, SUNIT[n]);
-
-	return dest;
-}
-
 void print_preview(Window * win) {
 	struct stat selstat;
 	char filepath[2048];
@@ -259,8 +283,6 @@ int main(int argc, char ** argv) {
 	if (argc == 2) {
 		realpath(argv[1], current_path);
 
-		printf(current_path);
-
 		if (current_path[strlen(current_path) - 1] != '/') {
 			current_path[strlen(current_path)] = '/';
 		}
@@ -268,21 +290,13 @@ int main(int argc, char ** argv) {
 		DIR * dir = opendir(current_path);
 
 		if (dir == NULL) {
-			if (getcwd(current_path, sizeof(current_path)) == NULL) {
-				fprintf(stderr, "getcwd error\n");
-				return -1;
-			}
-			strcat(current_path, "/");
+			set_current_path_to_pwd();
 		}
 
 		closedir(dir);
 
 	} else {
-		if (getcwd(current_path, sizeof(current_path)) == NULL) {
-			fprintf(stderr, "getcwd error\n");
-			return -1;
-		}
-		strcat(current_path, "/");
+		set_current_path_to_pwd();
 	}
 
 	magic_cookie = magic_open(MAGIC_MIME_TYPE);
