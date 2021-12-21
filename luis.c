@@ -9,6 +9,7 @@
 #include <magic.h>
 #include <limits.h>
 #include <unistd.h>
+#include <errno.h>
 
 const char DTC[] = {
  [DT_BLK] =     'b',
@@ -230,6 +231,16 @@ void print_preview(Window * win) {
 		SET_COLOR(100, 100, 100);
 		printfxy_to_window(win, 0, 5, "Content");
 		RESET_VIDEO();
+
+		DIR * dir = opendir(filepath);
+
+		if (dir == NULL) {
+			SET_COLOR(180, 60, 60);
+			printfxy_to_window(win, 0, 7, strerror(errno));
+			RESET_VIDEO();
+			return;
+		}
+
 		write_dir_content_to_win(win, filepath, -1, 7);
 	}
 }
