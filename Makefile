@@ -18,5 +18,5 @@ luis: ${OBJ}
 	${CC} -o $@ ${OBJ} ${LDFLAGS}
 
 clean:
-	rm ${OBJ} test
+	rm ${OBJ} luis
 
