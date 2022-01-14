@@ -20,3 +20,5 @@ luis: ${OBJ}
 clean:
 	rm ${OBJ} luis
 
+install:
+	install luis /usr/local/bin/

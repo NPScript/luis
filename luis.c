@@ -25,12 +25,16 @@ void enter_parent();
 void enter_directory();
 void help();
 void print_preview(Window * win);
+void run_cmd();
 
 magic_t magic_cookie;
 
 int (*current_filter)(const struct dirent *);
 int selected_item = 0;
 char current_path[PATH_MAX] = {0};
+
+Window mainwin;
+Window preview;
 
 #include "config.h"
 
@@ -71,7 +75,7 @@ char * readable_size(long size, char * dest) {
 		++n;
 	}
 
-	sprintf(dest, "%d %s", size, SUNIT[n]);
+	sprintf(dest, "%ld %s", size, SUNIT[n]);
 
 	return dest;
 }
@@ -213,6 +217,24 @@ void help() {
 	while (getch() != 'c');
 }
 
+void run_cmd() {
+	printfxy(1, 1, "%*s", get_term_width(), "");
+	printfxy(1, 1, "command: ");
+	char run[BUFSIZ] = "cd ";
+	char command[BUFSIZ] = "cd ";
+
+	strcat(run, current_path);
+	strcat(run, " && ");
+
+	showcursor(1);
+	showecho(1);
+	fgets(command, BUFSIZ, stdin);
+	showcursor(0);
+	showecho(0);
+
+	system(strcat(run, command));
+}
+
 void print_preview(Window * win) {
 	struct stat selstat;
 	char filepath[2048];
@@ -259,8 +281,6 @@ void print_preview(Window * win) {
 }
 
 int main(int argc, char ** argv) {
-	Window mainwin;
-	Window preview;
 
 	mainwin.x = 1;
 	mainwin.y = 2;
@@ -317,6 +337,7 @@ int main(int argc, char ** argv) {
 			case 'l': enter_directory(); break;
 			case 'h': enter_parent(); break;
 			case 'o': enter_directory(); break;
+			case 'c': run_cmd(); break;
 			case '?': help(); break;
 			default: break;
 		}
